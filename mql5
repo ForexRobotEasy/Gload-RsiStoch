@@ -1,0 +1,78 @@
+
+// Program Name: Gload RsiStoch
+// Developer's Site: forexroboteasy.com
+// Development Team: Forex Robot Easy Team
+
+// This code calculates the RSI and Stoch indicators based on the provided data
+
+// Define the input parameters
+input int RSI_period = 14; // RSI period
+input int Stoch_K_period = 14; // Stoch K period
+input int Stoch_D_period = 3; // Stoch D period
+
+// Define the variables
+double RSI_buffer[];
+double Stoch_K_buffer[];
+double Stoch_D_buffer[];
+
+// Calculate RSI and Stoch indicators
+void CalculateIndicators()
+{
+    int totalBars = Bars - 1;
+    
+    ArrayResize(RSI_buffer, totalBars);
+    ArrayResize(Stoch_K_buffer, totalBars);
+    ArrayResize(Stoch_D_buffer, totalBars);
+    
+    for(int i = totalBars; i >= 0; i--)
+    {
+        double RSI = iRSI(NULL, 0, RSI_period, PRICE_CLOSE, i);
+        double Stoch_K = iStochastic(NULL, 0, Stoch_K_period, Stoch_D_period, 0, MODE_SMA, STO_LOWHIGH, i);
+        double Stoch_D = iStochastic(NULL, 0, Stoch_K_period, Stoch_D_period, 0, MODE_SMA, STO_LOWHIGH, i + 1);
+        
+        RSI_buffer[i] = RSI;
+        Stoch_K_buffer[i] = Stoch_K;
+        Stoch_D_buffer[i] = Stoch_D;
+    }
+}
+
+// Identify intersection points between RSI and Stoch indicators
+void IdentifyIntersectionPoints()
+{
+    int totalBars = Bars - 1;
+    
+    for(int i = totalBars; i >= 0; i--)
+    {
+        if(RSI_buffer[i] > Stoch_K_buffer[i] && RSI_buffer[i+1] < Stoch_K_buffer[i+1])
+        {
+            // Intersection point: RSI crosses above Stoch
+            // Generate buy signal
+            Print('Buy signal at bar ', i);
+        }
+        
+        if(RSI_buffer[i] < Stoch_K_buffer[i] && RSI_buffer[i+1] > Stoch_K_buffer[i+1])
+        {
+            // Intersection point: RSI crosses below Stoch
+            // Generate sell signal
+            Print('Sell signal at bar ', i);
+        }
+    }
+}
+
+// Implement risk management techniques
+void RiskManagement()
+{
+    // Add code for stop-loss and take-profit levels
+    // This can be based on a percentage of the current price or a fixed value
+    // Example:
+    double stopLoss = Bid - 100 * Point; // Stop-loss 100 pips below current price
+    double takeProfit = Bid + 200 * Point; // Take-profit 200 pips above current price
+}
+
+// Main function
+void OnTick()
+{
+    CalculateIndicators();
+    IdentifyIntersectionPoints();
+    RiskManagement();
+}
